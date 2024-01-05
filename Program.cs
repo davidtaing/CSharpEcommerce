@@ -1,23 +1,39 @@
 using Microsoft.OpenApi.Models;
+using NLog;
+using NLog.Web;
 
-var builder = WebApplication.CreateBuilder(args);
+var logger = LogManager.Setup().LoadConfigurationFromAppSettings().GetCurrentClassLogger();
+logger.Debug("init main");
 
-// Add the necessary NuGet packages
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+try
 {
-  c.SwaggerDoc("v1", new OpenApiInfo { Title = "eCommerce API", Description = "eCommerce API", Version = "v1" });
-});
+  var builder = WebApplication.CreateBuilder(args);
 
-var app = builder.Build();
+  // Add the necessary NuGet packages
+  builder.Services.AddEndpointsApiExplorer();
+  builder.Services.AddSwaggerGen(c =>
+  {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "eCommerce API", Description = "eCommerce API", Version = "v1" });
+  });
 
-// Enable Swagger UI
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+  var app = builder.Build();
+
+  // Enable Swagger UI
+  app.UseSwagger();
+  app.UseSwaggerUI(c =>
+  {
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
+  });
+
+  app.MapGet("/", () => "Hello World!");
+
+  app.Run();
+}
+catch (Exception ex)
 {
-  c.SwaggerEndpoint("/swagger/v1/swagger.json", "Todo API v1");
-});
-
-app.MapGet("/", () => "Hello World!");
-
-app.Run();
+  Console.WriteLine(ex.Message);
+}
+finally
+{
+  NLog.LogManager.Shutdown();
+}
